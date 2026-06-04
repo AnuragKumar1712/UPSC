@@ -74,6 +74,8 @@ Set environment variables in `server/.env`:
 - `CLIENT_URL` — your frontend URL
 - `NODE_ENV=production`
 
-Build the client: `npm run build --prefix client`
+Build everything: `npm run build` (client + server)
 
-Serve the API and static build from your host (Railway, Render, VPS).
+Start production API + static UI: `npm run start` (from repo root, with `NODE_ENV=production`)
+
+**Railway:** step-by-step guide in [RAILWAY.md](./RAILWAY.md).
