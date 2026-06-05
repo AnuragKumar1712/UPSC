@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api, QuizQuestion } from '../services/api';
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { api, QuizQuestion } from "../services/api";
 
 const TYPES = [
-  { id: 'wrong', label: 'Wrong Questions' },
-  { id: 'bookmarked', label: 'Bookmarked' },
-  { id: 'weak', label: 'Weak Topics' },
-  { id: 'recent', label: 'Recently Added' },
-  { id: 'random', label: 'Random Revision' },
+  { id: "wrong", label: "Wrong Questions" },
+  { id: "bookmarked", label: "Bookmarked" },
+  { id: "weak", label: "Weak Topics" },
+  { id: "recent", label: "Recently Added" },
+  { id: "random", label: "Random Revision" },
 ];
 
 export default function RevisionPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [type, setType] = useState(searchParams.get('type') || 'wrong');
+  const [type, setType] = useState(searchParams.get("type") || "wrong");
   const [limit, setLimit] = useState(20);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [current, setCurrent] = useState(0);
@@ -40,9 +40,16 @@ export default function RevisionPage() {
     let correct = 0;
     for (const question of questions) {
       const selected = answers[question.id];
-      if (selected && question.correct_answer && selected === question.correct_answer) correct++;
+      if (
+        selected &&
+        question.correct_answer &&
+        selected === question.correct_answer
+      )
+        correct++;
     }
-    const pct = questions.length ? Math.round((correct / questions.length) * 100) : 0;
+    const pct = questions.length
+      ? Math.round((correct / questions.length) * 100)
+      : 0;
     setScore(pct);
     setDone(true);
     await api.completeRevision({
@@ -56,7 +63,9 @@ export default function RevisionPage() {
     return (
       <div>
         <h2 className="text-2xl font-bold text-upsc-navy">Revision Mode</h2>
-        <p className="mt-4 text-gray-500">No questions available for this revision type.</p>
+        <p className="mt-4 text-gray-500">
+          No questions available for this revision type.
+        </p>
         <select
           className="mt-4 border rounded-lg px-3 py-2"
           value={type}
@@ -77,11 +86,14 @@ export default function RevisionPage() {
       <div>
         <h2 className="text-2xl font-bold text-upsc-navy">Revision Complete</h2>
         <p className="mt-4 text-xl">Score: {score}%</p>
-        <button onClick={load} className="mt-4 px-4 py-2 bg-upsc-navy text-white rounded-lg">
+        <button
+          onClick={load}
+          className="mt-4 px-4 py-2 bg-upsc-navy text-white rounded-lg"
+        >
           Try Again
         </button>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="mt-4 ml-2 px-4 py-2 border rounded-lg"
         >
           Dashboard
@@ -100,7 +112,7 @@ export default function RevisionPage() {
             key={t.id}
             onClick={() => setType(t.id)}
             className={`px-3 py-1 rounded text-sm ${
-              type === t.id ? 'bg-upsc-navy text-white' : 'border'
+              type === t.id ? "bg-upsc-navy text-white" : "border"
             }`}
           >
             {t.label}
@@ -121,17 +133,25 @@ export default function RevisionPage() {
           <p className="text-sm text-gray-400">
             {current + 1} / {questions.length}
           </p>
-          <p className="mt-2 text-lg font-medium">{q.question_text}</p>
+          <p className="mt-2 text-lg font-medium whitespace-pre-wrap break-words">
+            {q.question_text}
+          </p>
           <div className="mt-4 space-y-2">
             {q.options.map((opt) => (
               <button
                 key={opt.id}
-                onClick={() => setAnswers({ ...answers, [q.id]: opt.option_text })}
+                onClick={() =>
+                  setAnswers({ ...answers, [q.id]: opt.option_text })
+                }
                 className={`w-full text-left px-4 py-2 rounded border ${
-                  answers[q.id] === opt.option_text ? 'border-upsc-navy bg-upsc-navy/5' : ''
+                  answers[q.id] === opt.option_text
+                    ? "border-upsc-navy bg-upsc-navy/5"
+                    : ""
                 }`}
               >
-                {opt.option_text}
+                <span className="whitespace-pre-wrap break-words">
+                  {opt.option_text}
+                </span>
               </button>
             ))}
           </div>
@@ -151,7 +171,10 @@ export default function RevisionPage() {
                 Next
               </button>
             ) : (
-              <button onClick={finish} className="px-4 py-2 bg-upsc-gold rounded font-medium">
+              <button
+                onClick={finish}
+                className="px-4 py-2 bg-upsc-gold rounded font-medium"
+              >
                 Finish
               </button>
             )}

@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import { api, Question, Section, Topic } from '../services/api';
+import { useEffect, useState } from "react";
+import { api, Question, Section, Topic } from "../services/api";
 
 export default function QuestionBankPage() {
   const [sections, setSections] = useState<Section[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filters, setFilters] = useState({
-    section_id: '',
-    topic_id: '',
-    difficulty: '',
-    keyword: '',
-    tag: '',
+    section_id: "",
+    topic_id: "",
+    difficulty: "",
+    keyword: "",
+    tag: "",
   });
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function QuestionBankPage() {
           className="border rounded-lg px-3 py-2"
           value={filters.section_id}
           onChange={(e) =>
-            setFilters({ ...filters, section_id: e.target.value, topic_id: '' })
+            setFilters({ ...filters, section_id: e.target.value, topic_id: "" })
           }
         >
           <option value="">All sections</option>
@@ -71,7 +71,9 @@ export default function QuestionBankPage() {
         <select
           className="border rounded-lg px-3 py-2"
           value={filters.difficulty}
-          onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
+          onChange={(e) =>
+            setFilters({ ...filters, difficulty: e.target.value })
+          }
         >
           <option value="">All difficulties</option>
           <option>Easy</option>
@@ -90,7 +92,10 @@ export default function QuestionBankPage() {
           value={filters.tag}
           onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
         />
-        <button onClick={load} className="bg-upsc-navy text-white rounded-lg px-4">
+        <button
+          onClick={load}
+          className="bg-upsc-navy text-white rounded-lg px-4"
+        >
           Search
         </button>
       </div>
@@ -100,18 +105,22 @@ export default function QuestionBankPage() {
       <div className="mt-4 space-y-3">
         {questions.map((q) => (
           <div key={q.id} className="bg-white border rounded-lg p-4">
-            <p className="font-medium">{q.question_text}</p>
+            <p className="font-medium whitespace-pre-wrap break-words">
+              {q.question_text}
+            </p>
             <p className="text-sm text-gray-500 mt-1">
               {q.section_name} → {q.topic_name} · {q.difficulty_level}
               {q.tags && ` · ${q.tags}`}
             </p>
-            <p className="text-sm text-green-700 mt-1">Answer: {q.correct_answer}</p>
+            <p className="text-sm text-green-700 mt-1 whitespace-pre-wrap break-words">
+              Answer: {q.correct_answer}
+            </p>
             {q.options && (
               <ul className="text-xs text-gray-400 mt-1">
                 {q.options.map((o) => (
                   <li key={o.id}>
                     {o.option_text}
-                    {o.is_correct ? ' ✓' : ''}
+                    {o.is_correct ? " ✓" : ""}
                   </li>
                 ))}
               </ul>
@@ -128,7 +137,7 @@ export default function QuestionBankPage() {
                 }}
                 className="text-upsc-navy"
               >
-                {q.is_bookmarked ? 'Unbookmark' : 'Bookmark'}
+                {q.is_bookmarked ? "Unbookmark" : "Bookmark"}
               </button>
               <button
                 onClick={async () => {
@@ -141,7 +150,7 @@ export default function QuestionBankPage() {
               </button>
               <button
                 onClick={async () => {
-                  if (confirm('Delete this question?')) {
+                  if (confirm("Delete this question?")) {
                     await api.deleteQuestion(q.id);
                     load();
                   }

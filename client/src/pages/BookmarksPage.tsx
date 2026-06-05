@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "../services/api";
 
 interface Bookmark {
   question_id: number;
@@ -13,7 +13,8 @@ interface Bookmark {
 export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
-  const load = () => api.getBookmarks().then((b) => setBookmarks(b as Bookmark[]));
+  const load = () =>
+    api.getBookmarks().then((b) => setBookmarks(b as Bookmark[]));
 
   useEffect(() => {
     load();
@@ -34,11 +35,15 @@ export default function BookmarksPage() {
       <div className="mt-6 space-y-3">
         {bookmarks.map((b) => (
           <div key={b.question_id} className="bg-white border rounded-lg p-4">
-            <p className="font-medium">{b.question_text}</p>
+            <p className="font-medium whitespace-pre-wrap break-words">
+              {b.question_text}
+            </p>
             <p className="text-sm text-gray-500 mt-1">
               {b.section_name} · {b.topic_name}
             </p>
-            <p className="text-sm text-green-700 mt-1">Answer: {b.correct_answer}</p>
+            <p className="text-sm text-green-700 mt-1 whitespace-pre-wrap break-words">
+              Answer: {b.correct_answer}
+            </p>
             <button
               onClick={async () => {
                 await api.removeBookmark(b.question_id);

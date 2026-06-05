@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { api } from '../services/api';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { api } from "../services/api";
 
 interface AnswerRow {
   question_text: string;
@@ -33,27 +33,33 @@ export default function ReviewAnswersPage() {
           <div
             key={i}
             className={`border rounded-lg p-4 ${
-              a.is_correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+              a.is_correct
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
             }`}
           >
             <p className="text-xs text-gray-500">
               {a.section_name} · {a.topic_name}
             </p>
-            <p className="font-medium mt-1">{a.question_text}</p>
-            <p className="text-sm mt-2">
-              Your answer: <strong>{a.selected_option || '(skipped)'}</strong>
+            <p className="font-medium mt-1 whitespace-pre-wrap break-words">
+              {a.question_text}
+            </p>
+            <p className="text-sm mt-2 whitespace-pre-wrap break-words">
+              Your answer: <strong>{a.selected_option || "(skipped)"}</strong>
             </p>
             {!a.is_correct && (
-              <p className="text-sm text-green-800">
+              <p className="text-sm text-green-800 whitespace-pre-wrap break-words">
                 Correct: <strong>{a.correct_option}</strong>
               </p>
             )}
             <span
               className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${
-                a.is_correct ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+                a.is_correct
+                  ? "bg-green-200 text-green-800"
+                  : "bg-red-200 text-red-800"
               }`}
             >
-              {a.is_correct ? 'Correct' : 'Incorrect'}
+              {a.is_correct ? "Correct" : "Incorrect"}
             </span>
           </div>
         ))}
