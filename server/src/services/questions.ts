@@ -1,5 +1,9 @@
-import { db } from '../db/connection.js';
-import { addToAnswerPool, generateDistractors, shuffleOptions } from './answerPool.js';
+import { db } from "../db/connection.js";
+import {
+  addToAnswerPool,
+  generateDistractors,
+  shuffleOptions,
+} from "./answerPool.js";
 
 export interface QuestionInput {
   topic_id: number;
@@ -11,13 +15,13 @@ export interface QuestionInput {
   smart_mode?: boolean;
 }
 
-export function createQuestionWithOptions(input: QuestionInput) {
+export async function createQuestionWithOptions(input: QuestionInput) {
   const {
     topic_id,
     question_text,
     correct_answer,
-    difficulty_level = 'Medium',
-    tags = '',
+    difficulty_level = "Medium",
+    tags = "",
     smart_mode = false,
   } = input;
 
@@ -28,65 +32,75 @@ export function createQuestionWithOptions(input: QuestionInput) {
     const distractors = generateDistractors(correct_answer, 3);
     optionTexts = shuffleOptions([correct_answer, ...distractors]);
   } else {
-    throw new Error('Four options required for manual mode');
+    throw new Error("Four options required for manual mode");
   }
 
   const unique = new Set(optionTexts.map((o) => o.trim()));
   if (unique.size !== 4) {
-    throw new Error('Options must be unique');
+    throw new Error("Options must be unique");
   }
   if (!optionTexts.includes(correct_answer.trim())) {
-    throw new Error('Correct answer must be one of the options');
+    throw new Error("Correct answer must be one of the options");
   }
 
-  addToAnswerPool(correct_answer);
+  await addToAnswerPool(correct_answer);
   for (const opt of optionTexts) {
-    addToAnswerPool(opt);
+    await addToAnswerPool(opt);
   }
 
-  const result = db
+  const result = await db
     .prepare(
       `INSERT INTO questions (topic_id, question_text, correct_answer, difficulty_level, tags)
-       VALUES (?, ?, ?, ?, ?)`
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
     )
-    .run(topic_id, question_text.trim(), correct_answer.trim(), difficulty_level, tags);
+    .run(
+      topic_id,
+      question_text.trim(),
+      correct_answer.trim(),
+      difficulty_level,
+      tags,
+    );
 
-  const questionId = result.lastInsertRowid as number;
+  const questionId = result.lastInsertRowid;
   const insertOpt = db.prepare(
-    'INSERT INTO options (question_id, option_text, is_correct) VALUES (?, ?, ?)'
+    "INSERT INTO options (question_id, option_text, is_correct) VALUES ($1, $2, $3)",
   );
 
   for (const opt of optionTexts) {
-    insertOpt.run(questionId, opt.trim(), opt.trim() === correct_answer.trim() ? 1 : 0);
+    await insertOpt.run(
+      questionId,
+      opt.trim(),
+      opt.trim() === correct_answer.trim() ? 1 : 0,
+    );
   }
 
   return getQuestionById(questionId);
 }
 
-export function getQuestionById(id: number) {
-  const question = db
+export async function getQuestionById(id: number) {
+  const result = await db
     .prepare(
       `SELECT q.*, t.topic_name, s.section_name, s.id as section_id
        FROM questions q
        JOIN topics t ON q.topic_id = t.id
        JOIN sections s ON t.section_id = s.id
-       WHERE q.id = ?`
+       WHERE q.id = $1`,
     )
     .get(id);
 
-  if (!question) return null;
+  if (!result) return null;
 
-  const options = db
-    .prepare('SELECT * FROM options WHERE question_id = ? ORDER BY id')
+  const options = await db
+    .prepare("SELECT * FROM options WHERE question_id = $1 ORDER BY id")
     .all(id);
 
-  const bookmarked = db
-    .prepare('SELECT 1 FROM bookmarks WHERE question_id = ?')
+  const bookmarked = await db
+    .prepare("SELECT 1 FROM bookmarks WHERE question_id = $1")
     .get(id);
 
-  return { ...question, options, bookmarked: !!bookmarked };
+  return { ...result, options, bookmarked: !!bookmarked };
 }
 
-export function deleteQuestion(id: number) {
-  db.prepare('DELETE FROM questions WHERE id = ?').run(id);
+export async function deleteQuestion(id: number) {
+  await db.prepare("DELETE FROM questions WHERE id = $1").run(id);
 }

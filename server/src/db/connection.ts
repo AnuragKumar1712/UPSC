@@ -1,24 +1,73 @@
-import Database from "better-sqlite3";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { Pool } from "pg";
+import dotenv from "dotenv";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// const dataDir = path.join(__dirname, '../../data');
-// const dbPath = path.join(dataDir, 'upsc.db');
+dotenv.config();
 
-const isProduction = process.env.NODE_ENV === "production";
-const dataDir = isProduction ? "/data" : path.join(__dirname, "../../data");
-const dbPath = path.join(dataDir, "upsc.db");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client", err);
+  process.exit(-1);
+});
 
-export const db = new Database(dbPath);
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+export const db = {
+  async query(text: string, params?: any[]) {
+    const start = Date.now();
+    try {
+      const result = await pool.query(text, params);
+      const duration = Date.now() - start;
+      console.log("Executed query", { text, duration, rows: result.rowCount });
+      return result;
+    } catch (error) {
+      console.error("Database query error", { text, error });
+      throw error;
+    }
+  },
+
+  async exec(text: string) {
+    const statements = text.split(";").filter((s) => s.trim());
+    for (const statement of statements) {
+      if (statement.trim()) {
+        await this.query(statement);
+      }
+    }
+  },
+
+  prepare(text: string) {
+    return {
+      run: async (...params: any[]) => {
+        const result = await db.query(text, params);
+        return {
+          changes: result.rowCount,
+          lastInsertRowid: result.rows[0]?.id,
+        };
+      },
+      get: async (...params: any[]) => {
+        const result = await db.query(text, params);
+        return result.rows[0];
+      },
+      all: async (...params: any[]) => {
+        const result = await db.query(text, params);
+        return result.rows;
+      },
+    };
+  },
+
+  pragma(statement: string) {
+    // PostgreSQL doesn't need pragma statements like SQLite
+    console.log("Pragma statement (skipped):", statement);
+  },
+};
 
 export function getDbPath() {
-  return dbPath;
+  return process.env.DATABASE_URL || "postgresql://localhost/upsc";
+}
+
+export async function closeDb() {
+  await pool.end();
 }

@@ -1,30 +1,43 @@
-import { db } from '../db/connection.js';
+import { db } from "../db/connection.js";
 
-export function addToAnswerPool(answer: string, category = '') {
+export async function addToAnswerPool(answer: string, category = "") {
   const trimmed = answer.trim();
   if (!trimmed) return;
   try {
-    db.prepare(
-      'INSERT OR IGNORE INTO answer_pool (answer_text, category) VALUES (?, ?)'
-    ).run(trimmed, category);
+    await db
+      .prepare(
+        "INSERT INTO answer_pool (answer_text, category) VALUES ($1, $2) ON CONFLICT (answer_text) DO NOTHING",
+      )
+      .run(trimmed, category);
   } catch {
     // ignore duplicates
   }
 }
 
-export function generateDistractors(correctAnswer: string, count = 3): string[] {
+export async function generateDistractors(
+  correctAnswer: string,
+  count = 3,
+): Promise<string[]> {
   const trimmed = correctAnswer.trim();
-  const rows = db
+  const result = await db
     .prepare(
       `SELECT answer_text FROM answer_pool
-       WHERE answer_text != ?
+       WHERE answer_text != $1
        ORDER BY RANDOM()
-       LIMIT ?`
+       LIMIT $2`,
     )
-    .all(trimmed, count) as { answer_text: string }[];
+    .all(trimmed, count);
 
-  const distractors = rows.map((r) => r.answer_text);
-  const fallback = ['Option B', 'Option C', 'Option D', 'None of the above', 'Not applicable'];
+  const distractors = (result as { answer_text: string }[]).map(
+    (r) => r.answer_text,
+  );
+  const fallback = [
+    "Option B",
+    "Option C",
+    "Option D",
+    "None of the above",
+    "Not applicable",
+  ];
 
   let i = 0;
   while (distractors.length < count && i < fallback.length) {
